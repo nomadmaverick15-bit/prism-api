@@ -814,141 +814,105 @@ document.getElementById('close-btn').addEventListener('click', () => {
 
 
 // ── Disputed Territories Data ─────────────────────────────────────────────
-const DISPUTED = [
-  {
-    name: 'Kashmir',
-    claimants: 'India, Pakistan, China',
-    coords: [[34.5, 73.5], [34.5, 78.5], [36.5, 78.5], [36.5, 73.5]],
-    center: [35.5, 76.0],
-  },
-  {
-    name: 'South China Sea Islands',
-    claimants: 'China, Vietnam, Philippines, Malaysia, Brunei, Taiwan',
-    coords: [[10.0, 112.0], [10.0, 118.0], [16.0, 118.0], [16.0, 112.0]],
-    center: [13.0, 115.0],
-  },
-  {
-    name: 'West Bank',
-    claimants: 'Israel, Palestine',
-    coords: [[31.3, 34.9], [31.3, 35.6], [32.6, 35.6], [32.6, 34.9]],
-    center: [31.9, 35.2],
-  },
-  {
-    name: 'Taiwan',
-    claimants: 'China, Taiwan',
-    coords: [[21.9, 120.0], [21.9, 122.0], [25.3, 122.0], [25.3, 120.0]],
-    center: [23.6, 121.0],
-  },
-  {
-    name: 'Crimea',
-    claimants: 'Russia, Ukraine',
-    coords: [[44.4, 32.5], [44.4, 36.5], [46.2, 36.5], [46.2, 32.5]],
-    center: [45.3, 34.5],
-  },
-  {
-    name: 'Donbas',
-    claimants: 'Russia, Ukraine',
-    coords: [[47.0, 37.0], [47.0, 40.0], [49.0, 40.0], [49.0, 37.0]],
-    center: [48.0, 38.5],
-  },
-  {
-    name: 'Nagorno-Karabakh',
-    claimants: 'Azerbaijan, Armenia',
-    coords: [[39.0, 46.0], [39.0, 47.5], [40.5, 47.5], [40.5, 46.0]],
-    center: [39.8, 46.7],
-  },
-  {
-    name: 'Western Sahara',
-    claimants: 'Morocco, Sahrawi Republic',
-    coords: [[20.7, -17.1], [20.7, -8.7], [27.7, -8.7], [27.7, -17.1]],
-    center: [24.2, -12.9],
-  },
-  {
-    name: 'Gaza Strip',
-    claimants: 'Hamas, Israel, Palestine',
-    coords: [[31.2, 34.2], [31.2, 34.6], [31.6, 34.6], [31.6, 34.2]],
-    center: [31.4, 34.4],
-  },
-  {
-    name: 'South Ossetia',
-    claimants: 'Georgia, Russia',
-    coords: [[42.0, 43.8], [42.0, 44.8], [42.7, 44.8], [42.7, 43.8]],
-    center: [42.35, 44.3],
-  },
-  {
-    name: 'Abkhazia',
-    claimants: 'Georgia, Russia',
-    coords: [[42.7, 40.0], [42.7, 42.0], [43.5, 42.0], [43.5, 40.0]],
-    center: [43.1, 41.0],
-  },
-  {
-    name: 'Northern Cyprus',
-    claimants: 'Cyprus, Turkey',
-    coords: [[35.1, 32.8], [35.1, 34.6], [35.7, 34.6], [35.7, 32.8]],
-    center: [35.4, 33.7],
-  },
-  {
-    name: 'Tibet',
-    claimants: 'China, Tibet Government-in-Exile',
-    coords: [[28.0, 78.0], [28.0, 99.0], [36.0, 99.0], [36.0, 78.0]],
-    center: [32.0, 88.5],
-  },
-  {
-    name: 'Xinjiang',
-    claimants: 'China (disputed autonomy)',
-    coords: [[35.0, 73.5], [35.0, 96.0], [49.0, 96.0], [49.0, 73.5]],
-    center: [42.0, 84.0],
-  },
-  {
-    name: 'Arunachal Pradesh',
-    claimants: 'India, China',
-    coords: [[26.5, 91.5], [26.5, 97.5], [29.5, 97.5], [29.5, 91.5]],
-    center: [28.0, 94.5],
-  },
-];
+// Loaded from Natural Earth disputed areas GeoJSON
 
-function renderDisputedTerritories() {
-  // Add hatch pattern to SVG defs
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg');
-  svg.style.cssText = 'position:absolute;width:0;height:0';
-  svg.innerHTML = `<defs>
-    <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="8" stroke="#ffaa00" stroke-width="2" stroke-opacity="0.6"/>
-    </pattern>
-  </defs>`;
-  document.body.appendChild(svg);
+const DISPUTED_LABELS = {
+  'Kashmir':              'India, Pakistan, China',
+  'Aksai Chin':           'India, China',
+  'Arunachal Pradesh':    'India, China',
+  'South China Sea':      'China, Vietnam, Philippines, Malaysia, Brunei, Taiwan',
+  'Taiwan':               'China, Taiwan',
+  'Crimea':               'Russia, Ukraine',
+  'Western Sahara':       'Morocco, Sahrawi Republic',
+  'West Bank':            'Israel, Palestine',
+  'Gaza Strip':           'Hamas, Israel, Palestine',
+  'Northern Cyprus':      'Cyprus, Turkey',
+  'Nagorno-Karabakh':     'Azerbaijan, Armenia',
+  'South Ossetia':        'Georgia, Russia',
+  'Abkhazia':             'Georgia, Russia',
+  'Somaliland':           'Somalia, Somaliland',
+  'Kosovo':               'Serbia, Kosovo',
+  'Paracel Islands':      'China, Vietnam, Taiwan',
+  'Spratly Islands':      'China, Vietnam, Philippines, Malaysia, Brunei, Taiwan',
+};
 
-  DISPUTED.forEach(d => {
-    const polygon = L.polygon(d.coords, {
+async function fetchDisputedGeoJSON() {
+  // Natural Earth disputed areas - has realistic borders
+  const urls = [
+    'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_0_disputed_areas.geojson',
+    'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_disputed_areas.geojson',
+  ];
+  
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Disputed GeoJSON loaded:', url, 'Features:', data.features.length);
+        return data;
+      }
+    } catch(e) {
+      console.warn('Failed:', url, e);
+    }
+  }
+  return null;
+}
+
+async function renderDisputedTerritories() {
+  const geojson = await fetchDisputedGeoJSON();
+  if (!geojson) {
+    console.warn('Could not load disputed territories GeoJSON');
+    return;
+  }
+
+  L.geoJSON(geojson, {
+    style: feature => ({
       color:       '#ffaa00',
-      weight:      1.5,
-      opacity:     0.9,
+      weight:      1.8,
+      opacity:     0.95,
       fillColor:   '#ffaa00',
-      fillOpacity: 0.18,
-      dashArray:   '6, 4',
-      className:   'disputed-zone',
-    }).addTo(map);
+      fillOpacity: 0.22,
+      dashArray:   '5, 4',
+    }),
+    onEachFeature: (feature, layer) => {
+      const p = feature.properties;
+      const name = p.NAME || p.name || p.NAME_LONG || p.BRK_NAME || 'Disputed Area';
+      const claimants = DISPUTED_LABELS[name] || p.SOVEREIGNT || 'Multiple claimants';
+      
+      layer.on({
+        mouseover: e => {
+          e.target.setStyle({ weight: 2.5, fillOpacity: 0.4 });
+          layer.bindTooltip(`
+            <div style="font-family:'JetBrains Mono',monospace">
+              <b style="color:#ffaa00">⚠ DISPUTED: ${name}</b><br>
+              <span style="color:#5a7a96;font-size:10px">Claimants: ${claimants}</span>
+            </div>`, {
+            className: 'map-tooltip',
+            sticky: true,
+          }).openTooltip();
+        },
+        mouseout: e => {
+          e.target.setStyle({ weight: 1.8, fillOpacity: 0.22 });
+          layer.closeTooltip();
+        }
+      });
+    }
+  }).addTo(map);
 
-    polygon.bindTooltip(`
-      <div style="font-family:'JetBrains Mono',monospace">
-        <b style="color:#ffaa00">⚠ DISPUTED: ${d.name}</b><br>
-        <span style="color:#5a7a96;font-size:10px">Claimants: ${d.claimants}</span>
-      </div>`, {
-      className: 'map-tooltip',
-      sticky: true,
-    });
-  });
-
-  // Add disputed legend item
+  // Add legend entry
   const legend = document.querySelector('.map-legend');
-  legend.innerHTML += `
-    <div style="margin-top:12px;border-top:1px solid #1e2a38;padding-top:10px">
+  if (legend) {
+    const entry = document.createElement('div');
+    entry.style.cssText = 'margin-top:12px;border-top:1px solid #1e2a38;padding-top:10px';
+    entry.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#e8edf3">
-        <div style="width:24px;height:10px;border:1.5px dashed #ffaa00;background:rgba(255,170,0,0.18)"></div>
+        <div style="width:24px;height:10px;border:1.8px dashed #ffaa00;background:rgba(255,170,0,0.22)"></div>
         DISPUTED TERRITORY
-      </div>
-    </div>`;
+      </div>`;
+    legend.appendChild(entry);
+  }
+  
+  console.log('Disputed territories rendered:', geojson.features.length, 'areas');
 }
 // ── Boot ───────────────────────────────────────────────────────────────────
 window.addEventListener('load', async function() {
@@ -969,7 +933,7 @@ window.addEventListener('load', async function() {
     renderSidebar(rankings);
     const geojson = await fetchGeoJSON();
     renderMap(geojson);
-    renderDisputedTerritories();
+    await renderDisputedTerritories();
     document.getElementById('loader').style.opacity = '0';
     document.getElementById('loader').style.transition = 'opacity 0.5s';
     setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
