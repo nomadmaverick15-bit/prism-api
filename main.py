@@ -278,3 +278,10 @@ def get_brief(iso3: str):
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
+
+@app.get("/countries.geojson")
+def serve_geojson():
+    return FileResponse(
+        os.path.join(static_dir, "countries.geojson"),
+        media_type="application/json"
+    )
