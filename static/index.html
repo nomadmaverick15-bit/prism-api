@@ -655,6 +655,7 @@ async function selectCountry(iso) {
   // Open panel
   const panel = document.getElementById('detail-panel');
   panel.classList.add('open');
+  setTimeout(() => map.invalidateSize(), 350);
 
   // Score data
   const entry = scoreMap[iso];
@@ -781,6 +782,7 @@ document.getElementById('search').addEventListener('input', e => {
 // ── Close panel ────────────────────────────────────────────────────────────
 document.getElementById('close-btn').addEventListener('click', () => {
   document.getElementById('detail-panel').classList.remove('open');
+  setTimeout(() => map.invalidateSize(), 350);
   document.querySelectorAll('.rank-item').forEach(el => el.classList.remove('active'));
   selectedIso = null;
 });
@@ -799,6 +801,7 @@ window.addEventListener('load', async function() {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
     }).addTo(map);
+    setTimeout(() => map.invalidateSize(), 100);
     await fetchRankings();
     renderSidebar(rankings);
     const geojson = await fetchGeoJSON();
