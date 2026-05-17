@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRISM — Political Risk Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:        #080b10;
+    --surface:   #0d1117;
+    --panel:     #111820;
+    --border:    #1e2a38;
+    --accent:    #00d4ff;
+    --danger:    #ff3b5c;
+    --warning:   #ffaa00;
+    --safe:      #00e5a0;
+    --text:      #e8edf3;
+    --muted:     #5a7a96;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 1000;
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+  }
+
+  .logo span {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-left: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .header-stats b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-search {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-search input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .sidebar-search input:focus {
+    border-color: var(--accent);
+  }
+
+  .sidebar-search input::placeholder { color: var(--muted); }
+
+  .rankings-header {
+    padding: 12px 16px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .rankings-list {
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .rankings-list::-webkit-scrollbar { width: 4px; }
+  .rankings-list::-webkit-scrollbar-track { background: transparent; }
+  .rankings-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(30,42,56,0.5);
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 12px;
+  }
+
+  .rank-item:hover { background: var(--panel); }
+  .rank-item.active { background: rgba(0,212,255,0.06); border-left: 2px solid var(--accent); }
+
+  .rank-num {
+    font-size: 10px;
+    color: var(--muted);
+    width: 24px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .rank-country {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rank-score {
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+    width: 40px;
+    text-align: right;
+  }
+
+  .rank-bar {
+    width: 48px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .rank-bar-fill {
+    position: absolute;
+    left: 0; top: 0;
+    height: 100%;
+  }
+
+  /* ── Map ── */
+  #map {
+    flex: 1;
+    background: var(--bg);
+  }
+
+  /* ── Detail Panel ── */
+  .detail-panel {
+    width: 340px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .detail-panel.open {
+    transform: translateX(0);
+  }
+
+  .detail-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .detail-country {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+
+  .detail-iso {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+
+  .detail-score-big {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .score-number {
+    font-family: var(--font-head);
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .detail-body::-webkit-scrollbar { width: 4px; }
+  .detail-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .section-title {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin: 20px 0 12px;
+    text-transform: uppercase;
+  }
+
+  .dim-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .dim-name {
+    font-size: 10px;
+    color: var(--muted);
+    width: 110px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dim-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .dim-bar-fill {
+    position: absolute;
+    left: 0; top: 0;
+    height: 100%;
+    transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .dim-val {
+    font-size: 11px;
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 160px;
+    margin-top: 8px;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .close-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ── Legend ── */
+  .map-legend {
+    position: absolute;
+    bottom: 30px;
+    left: 310px;
+    z-index: 999;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .legend-title {
+    letter-spacing: 0.15em;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .legend-scale {
+    display: flex;
+    height: 6px;
+    width: 200px;
+    margin-bottom: 6px;
+  }
+
+  .legend-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+  }
+
+  /* ── Loading ── */
+  .loader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    gap: 20px;
+  }
+
+  .loader-logo {
+    font-family: var(--font-head);
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+  }
+
+  .loader-bar {
+    width: 200px;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loader-bar::after {
+    content: '';
+    position: absolute;
+    left: -60%;
+    width: 60%;
+    height: 100%;
+    background: var(--accent);
+    animation: loader-slide 1s infinite ease-in-out;
+  }
+
+  @keyframes loader-slide {
+    to { left: 100%; }
+  }
+
+  .loader-text {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+
+  /* Leaflet overrides */
+  .leaflet-container { background: #060a0e; }
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; background: var(--surface) !important; }
+  .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-bottom: 1px solid var(--border) !important; }
+  .leaflet-control-zoom a:hover { background: var(--panel) !important; }
+  .leaflet-popup-content-wrapper {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-radius: 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .leaflet-popup-tip { background: var(--panel); }
+  .leaflet-popup-close-button { color: var(--muted) !important; }
+
+  /* Tooltip */
+  .map-tooltip {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 8px 12px;
+    pointer-events: none;
+    border-radius: 0;
+  }
+
+  .no-data { color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-logo">PRISM</div>
+  <div class="loader-bar"></div>
+  <div class="loader-text" id="loader-text">INITIALISING RISK INTELLIGENCE...</div>
+</div>
+
+<header>
+  <div>
+    <span class="logo">PRISM <span>POLITICAL RISK INTELLIGENCE SYSTEM</span></span>
+  </div>
+  <div class="header-stats">
+    <div>COUNTRIES <b id="stat-countries">—</b></div>
+    <div>HIGHEST RISK <b id="stat-top">—</b></div>
+    <div>LOWEST RISK <b id="stat-bottom">—</b></div>
+    <div>DATA <b>2024</b></div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-search">
+      <input type="text" id="search" placeholder="SEARCH COUNTRY...">
+    </div>
+    <div class="rankings-header">
+      <span>RANK · COUNTRY</span>
+      <span>SCORE</span>
+    </div>
+    <div class="rankings-list" id="rankings-list"></div>
+  </div>
+
+  <!-- Map -->
+  <div style="flex:1; position:relative;">
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="legend-title">PRISM RISK SCORE</div>
+      <div class="legend-scale" id="legend-scale"></div>
+      <div class="legend-labels">
+        <span>LOW</span>
+        <span>MEDIUM</span>
+        <span>HIGH</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="detail-panel" id="detail-panel">
+    <button class="close-btn" id="close-btn">✕</button>
+    <div class="detail-header">
+      <div class="detail-country" id="d-country">—</div>
+      <div class="detail-iso" id="d-iso">—</div>
+      <div class="detail-score-big">
+        <div class="score-number" id="d-score">—</div>
+        <div class="score-label">RISK SCORE<br>/ 100</div>
+      </div>
+    </div>
+    <div class="detail-body">
+      <div class="section-title">RISK DIMENSIONS</div>
+      <div id="d-dims"></div>
+      <div class="section-title">RISK TREND 2019–2024</div>
+      <div class="chart-wrap">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://prism-api-zm47.onrender.com';
+
+// ── Color scale ────────────────────────────────────────────────────────────
+function scoreColor(score) {
+  if (!score && score !== 0) return '#1e2a38';
+  const t = (score - 45) / 35; // map 45-80 to 0-1
+  const clamped = Math.max(0, Math.min(1, t));
+  if (clamped < 0.33) return interpolate('#00e5a0', '#ffaa00', clamped / 0.33);
+  if (clamped < 0.66) return interpolate('#ffaa00', '#ff6b35', (clamped - 0.33) / 0.33);
+  return interpolate('#ff6b35', '#ff3b5c', (clamped - 0.66) / 0.34);
+}
+
+function interpolate(c1, c2, t) {
+  const r1 = parseInt(c1.slice(1,3),16), g1 = parseInt(c1.slice(3,5),16), b1 = parseInt(c1.slice(5,7),16);
+  const r2 = parseInt(c2.slice(1,3),16), g2 = parseInt(c2.slice(3,5),16), b2 = parseInt(c2.slice(5,7),16);
+  const r = Math.round(r1 + (r2-r1)*t).toString(16).padStart(2,'0');
+  const g = Math.round(g1 + (g2-g1)*t).toString(16).padStart(2,'0');
+  const b = Math.round(b1 + (b2-b1)*t).toString(16).padStart(2,'0');
+  return `#${r}${g}${b}`;
+}
+
+// Build legend
+(function buildLegend() {
+  const scale = document.getElementById('legend-scale');
+  for (let i = 0; i <= 40; i++) {
+    const s = 45 + i * (35/40);
+    const div = document.createElement('div');
+    div.style.cssText = `flex:1; background:${scoreColor(s)};`;
+    scale.appendChild(div);
+  }
+})();
+
+// ── State ──────────────────────────────────────────────────────────────────
+let rankings = [];
+let scoreMap = {};
+let trendChart = null;
+let geojsonLayer = null;
+let selectedIso = null;
+let map;
+
+// ── Fetch data ─────────────────────────────────────────────────────────────
+async function fetchRankings() {
+  document.getElementById('loader-text').textContent = 'LOADING RISK SCORES...';
+  const res = await fetch(`${API}/rankings?limit=215`);
+  const data = await res.json();
+  rankings = data.rankings;
+  rankings.forEach(r => { scoreMap[r.iso3] = r; });
+
+  document.getElementById('stat-countries').textContent = rankings.length;
+  document.getElementById('stat-top').textContent = rankings[0]?.country?.split(',')[0] || '—';
+  document.getElementById('stat-bottom').textContent = rankings[rankings.length-1]?.country?.split(',')[0] || '—';
+}
+
+async function fetchGeoJSON() {
+  document.getElementById('loader-text').textContent = 'LOADING MAP DATA...';
+  const res = await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
+  return res.json();
+}
+
+// ── Render sidebar ─────────────────────────────────────────────────────────
+function renderSidebar(data) {
+  const list = document.getElementById('rankings-list');
+  list.innerHTML = '';
+  data.forEach(r => {
+    const color = scoreColor(r.prism_score);
+    const div = document.createElement('div');
+    div.className = 'rank-item';
+    div.dataset.iso = r.iso3;
+    div.innerHTML = `
+      <span class="rank-num">${r.rank}</span>
+      <span class="rank-country">${r.country}</span>
+      <span class="rank-score" style="color:${color}">${r.prism_score}</span>
+      <div class="rank-bar">
+        <div class="rank-bar-fill" style="width:${r.prism_score}%;background:${color}"></div>
+      </div>`;
+    div.addEventListener('click', () => selectCountry(r.iso3));
+    list.appendChild(div);
+  });
+}
+
+// ── Render map ─────────────────────────────────────────────────────────────
+function renderMap(geojson) {
+  geojsonLayer = L.geoJSON(geojson, {
+    style: feature => {
+      const iso = feature.properties.ISO_A3;
+      const entry = scoreMap[iso];
+      return {
+        fillColor:   entry ? scoreColor(entry.prism_score) : '#1a2433',
+        fillOpacity: entry ? 0.82 : 0.3,
+        color:       '#0d1520',
+        weight:      0.8,
+        opacity:     1,
+      };
+    },
+    onEachFeature: (feature, layer) => {
+      const iso = feature.properties.ISO_A3;
+      const entry = scoreMap[iso];
+      layer.on({
+        mouseover: e => {
+          const l = e.target;
+          l.setStyle({ weight: 2, color: '#00d4ff', fillOpacity: 0.95 });
+          l.bindTooltip(`
+            <div style="font-family:'JetBrains Mono',monospace">
+              <b>${feature.properties.ADMIN}</b><br>
+              ${entry ? `Risk Score: <b style="color:${scoreColor(entry.prism_score)}">${entry.prism_score}</b>` : '<span style="color:#5a7a96">No data</span>'}
+            </div>`, {
+            className: 'map-tooltip',
+            sticky: true,
+          }).openTooltip();
+        },
+        mouseout: e => {
+          geojsonLayer.resetStyle(e.target);
+          e.target.closeTooltip();
+        },
+        click: () => {
+          if (entry) selectCountry(iso);
+        }
+      });
+    }
+  }).addTo(map);
+}
+
+// ── Select country ─────────────────────────────────────────────────────────
+async function selectCountry(iso) {
+  selectedIso = iso;
+
+  // Highlight sidebar
+  document.querySelectorAll('.rank-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.iso === iso);
+  });
+
+  // Scroll sidebar to item
+  const activeEl = document.querySelector(`.rank-item[data-iso="${iso}"]`);
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+
+  // Open panel
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('open');
+
+  // Score data
+  const entry = scoreMap[iso];
+  if (!entry) return;
+
+  document.getElementById('d-country').textContent = entry.country;
+  document.getElementById('d-iso').textContent = `${entry.iso3} · RANK #${entry.rank}`;
+  const scoreEl = document.getElementById('d-score');
+  scoreEl.textContent = entry.prism_score;
+  scoreEl.style.color = scoreColor(entry.prism_score);
+
+  // Fetch full score with dimensions
+  try {
+    const res = await fetch(`${API}/score/${iso}`);
+    const data = await res.json();
+    renderDimensions(data.dimensions);
+  } catch(e) {}
+
+  // Fetch trend
+  try {
+    const res = await fetch(`${API}/trend/${iso}`);
+    const data = await res.json();
+    renderTrend(data.trend);
+  } catch(e) {}
+}
+
+// ── Render dimensions ──────────────────────────────────────────────────────
+const DIM_LABELS = {
+  risk_governance:    'GOVERNANCE',
+  risk_conflict:      'CONFLICT',
+  risk_economic:      'ECONOMIC',
+  risk_democracy:     'DEMOCRACY',
+  risk_corruption:    'CORRUPTION',
+  risk_social_unrest: 'SOCIAL UNREST',
+  risk_sanctions:     'SANCTIONS',
+  risk_geopolitical:  'GEOPOLITICAL',
+};
+
+function renderDimensions(dims) {
+  const container = document.getElementById('d-dims');
+  container.innerHTML = '';
+  Object.entries(DIM_LABELS).forEach(([key, label]) => {
+    const val = dims[key];
+    if (val === undefined) return;
+    const color = scoreColor(val);
+    const row = document.createElement('div');
+    row.className = 'dim-row';
+    row.innerHTML = `
+      <span class="dim-name">${label}</span>
+      <div class="dim-bar-wrap">
+        <div class="dim-bar-fill" style="width:${val}%;background:${color}"></div>
+      </div>
+      <span class="dim-val" style="color:${color}">${val.toFixed(0)}</span>`;
+    container.appendChild(row);
+  });
+}
+
+// ── Render trend chart ─────────────────────────────────────────────────────
+function renderTrend(trend) {
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
+  const ctx = document.getElementById('trend-chart').getContext('2d');
+  const years = trend.map(t => t.year);
+  const scores = trend.map(t => t.prism_score);
+  const colors = scores.map(s => scoreColor(s));
+
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [{
+        data: scores,
+        borderColor: '#00d4ff',
+        borderWidth: 2,
+        pointBackgroundColor: colors,
+        pointBorderColor: colors,
+        pointRadius: 5,
+        tension: 0.3,
+        fill: true,
+        backgroundColor: 'rgba(0,212,255,0.05)',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111820',
+          borderColor: '#1e2a38',
+          borderWidth: 1,
+          titleColor: '#5a7a96',
+          bodyColor: '#e8edf3',
+          titleFont: { family: "'JetBrains Mono'" },
+          bodyFont:  { family: "'JetBrains Mono'" },
+          callbacks: {
+            label: ctx => `Risk Score: ${ctx.raw}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#1e2a38' },
+          ticks: { color: '#5a7a96', font: { family: "'JetBrains Mono'", size: 10 } }
+        },
+        y: {
+          min: 40, max: 85,
+          grid: { color: '#1e2a38' },
+          ticks: { color: '#5a7a96', font: { family: "'JetBrains Mono'", size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+// ── Search ─────────────────────────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  const filtered = q
+    ? rankings.filter(r => r.country.toLowerCase().includes(q) || r.iso3.toLowerCase().includes(q))
+    : rankings;
+  renderSidebar(filtered);
+});
+
+// ── Close panel ────────────────────────────────────────────────────────────
+document.getElementById('close-btn').addEventListener('click', () => {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.querySelectorAll('.rank-item').forEach(el => el.classList.remove('active'));
+  selectedIso = null;
+});
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', async function() {
+  try {
+    map = L.map('map', {
+      center: [20, 10],
+      zoom: 2.5,
+      minZoom: 1.5,
+      maxZoom: 8,
+      zoomControl: true,
+      attributionControl: false,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+    }).addTo(map);
+    await fetchRankings();
+    renderSidebar(rankings);
+    const geojson = await fetchGeoJSON();
+    renderMap(geojson);
+    document.getElementById('loader').style.opacity = '0';
+    document.getElementById('loader').style.transition = 'opacity 0.5s';
+    setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+  } catch(err) {
+    document.getElementById('loader-text').textContent = 'ERROR: ' + err.message;
+  }
+});
+</script>
+</body>
+</html>
