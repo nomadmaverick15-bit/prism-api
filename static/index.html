@@ -584,7 +584,7 @@ async function fetchRankings() {
 
 async function fetchGeoJSON() {
   document.getElementById('loader-text').textContent = 'LOADING MAP DATA...';
-  const res = await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
+  const res = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson');
   return res.json();
 }
 
@@ -613,7 +613,12 @@ function renderSidebar(data) {
 function renderMap(geojson) {
   geojsonLayer = L.geoJSON(geojson, {
     style: feature => {
-      const iso = feature.properties.ISO_A3;
+      // Try multiple property keys for ISO3
+      const iso = feature.properties.ISO_A3 || feature.properties.iso_a3 || 
+                  feature.properties.ISO3 || feature.properties.ADM0_A3 ||
+                  feature.properties.id || '';
+      const name = feature.properties.ADMIN || feature.properties.name || 
+                   feature.properties.NAME || feature.properties.sovereignt || iso;
       const entry = scoreMap[iso];
       return {
         fillColor:   entry ? scoreColor(entry.prism_score) : '#1a2433',
@@ -624,7 +629,11 @@ function renderMap(geojson) {
       };
     },
     onEachFeature: (feature, layer) => {
-      const iso = feature.properties.ISO_A3;
+      const iso = feature.properties.ISO_A3 || feature.properties.iso_a3 || 
+                  feature.properties.ISO3 || feature.properties.ADM0_A3 ||
+                  feature.properties.id || '';
+      const name = feature.properties.ADMIN || feature.properties.name || 
+                   feature.properties.NAME || feature.properties.sovereignt || iso;
       const entry = scoreMap[iso];
       layer.on({
         mouseover: e => {
@@ -632,7 +641,7 @@ function renderMap(geojson) {
           l.setStyle({ weight: 2, color: '#00d4ff', fillOpacity: 0.95 });
           l.bindTooltip(`
             <div style="font-family:'JetBrains Mono',monospace">
-              <b>${feature.properties.ADMIN}</b><br>
+              <b>${name}</b><br>
               ${entry ? `Risk Score: <b style="color:${scoreColor(entry.prism_score)}">${entry.prism_score}</b>` : '<span style="color:#5a7a96">No data</span>'}
             </div>`, {
             className: 'map-tooltip',
@@ -645,6 +654,10 @@ function renderMap(geojson) {
         },
         click: () => {
           if (entry) selectCountry(iso);
+          else if (iso) {
+            // debug: log what props we got
+            console.log('No entry for ISO:', iso, 'Props:', JSON.stringify(feature.properties));
+          }
         }
       });
     }
