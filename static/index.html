@@ -84,6 +84,7 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    height: calc(100vh - 56px);
   }
 
   /* ── Sidebar ── */
@@ -195,6 +196,17 @@
   #map {
     flex: 1;
     background: var(--bg);
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+  }
+  
+  .map-container {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   /* ── Detail Panel ── */
@@ -481,8 +493,8 @@
   </div>
 
   <!-- Map -->
-  <div style="flex:1; position:relative;">
-    <div id="map"></div>
+  <div class="map-container">
+    <div id="map" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>
     <div class="map-legend">
       <div class="legend-title">PRISM RISK SCORE</div>
       <div class="legend-scale" id="legend-scale"></div>
