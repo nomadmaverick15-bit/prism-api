@@ -484,16 +484,49 @@ window.addEventListener('load',async function(){
     map=L.map('map',{center:[20,10],zoom:2.5,minZoom:1.5,maxZoom:8,zoomControl:true,attributionControl:false});
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
     setTimeout(()=>map.invalidateSize(),100);
+
+    // Step 1 — rankings (must succeed)
+    document.getElementById('loader-text').textContent='LOADING RISK SCORES...';
     await fetchRankings();
     renderSidebar(rankings);
-    const geojson=await fetchGeoJSON();
-    renderMap(geojson);
-    await renderDisputedTerritories();
+
+    // Step 2 — hide loader NOW so user sees sidebar even if map is slow
     document.getElementById('loader').style.opacity='0';
     document.getElementById('loader').style.transition='opacity 0.5s';
     setTimeout(()=>document.getElementById('loader').style.display='none',500);
+
+    // Step 3 — load GeoJSON with multiple fallbacks
+    document.getElementById('loader-text').textContent='LOADING MAP...';
+    const GEOJSON_SOURCES=[
+      'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson',
+      'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json',
+    ];
+    let geojson=null;
+    for(const url of GEOJSON_SOURCES){
+      try{
+        const controller=new AbortController();
+        const timeout=setTimeout(()=>controller.abort(),15000);
+        const res=await fetch(url,{signal:controller.signal});
+        clearTimeout(timeout);
+        if(res.ok){geojson=await res.json();break;}
+      }catch(e){console.warn('GeoJSON source failed:',url,e);}
+    }
+    if(geojson) renderMap(geojson);
+    else console.warn('All GeoJSON sources failed — map will show without country shapes');
+
+    // Step 4 — disputed territories (optional, don't block)
+    renderDisputedTerritories().catch(e=>console.warn('Disputed territories failed:',e));
+
+    // Keep alive ping every 14 min to prevent Render sleep
+    setInterval(()=>fetch(API+'/').catch(()=>{}), 14*60*1000);
+
   }catch(err){
     document.getElementById('loader-text').textContent='ERROR: '+err.message;
+    // Still hide loader after error so user sees what happened
+    setTimeout(()=>{
+      document.getElementById('loader').style.opacity='0';
+      setTimeout(()=>document.getElementById('loader').style.display='none',500);
+    },3000);
   }
 });
 </script>
