@@ -6,3 +6,4 @@ xgboost
 shap
 scikit-learn
 aiofiles
+httpx
