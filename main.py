@@ -321,23 +321,88 @@ async def get_geography(iso3: str):
 
 
 # ── History + Politics (proxy to Wikipedia) ───────────────────────────────────
+# Name aliases for countries that Wikipedia names differently
+WIKI_ALIASES = {
+    "Korea, Rep.": "South Korea",
+    "Korea, Dem. People's Rep.": "North Korea",
+    "Iran, Islamic Rep.": "Iran",
+    "Egypt, Arab Rep.": "Egypt",
+    "Venezuela, RB": "Venezuela",
+    "Congo, Rep.": "Republic of the Congo",
+    "Congo, Dem. Rep.": "Democratic Republic of the Congo",
+    "Yemen, Rep.": "Yemen",
+    "Syrian Arab Republic": "Syria",
+    "Lao PDR": "Laos",
+    "Kyrgyz Republic": "Kyrgyzstan",
+    "Slovak Republic": "Slovakia",
+    "Czechia": "Czech Republic",
+    "Turkiye": "Turkey",
+    "Gambia, The": "The Gambia",
+    "Bahamas, The": "The Bahamas",
+    "Brunei Darussalam": "Brunei",
+    "Cabo Verde": "Cape Verde",
+    "Eswatini": "Eswatini",
+    "Micronesia, Fed. Sts.": "Micronesia",
+    "St. Lucia": "Saint Lucia",
+    "St. Kitts and Nevis": "Saint Kitts and Nevis",
+    "St. Vincent and the Grenadines": "Saint Vincent and the Grenadines",
+    "Sao Tome and Principe": "São Tomé and Príncipe",
+    "Timor-Leste": "East Timor",
+    "West Bank and Gaza": "Palestinian territories",
+    "Hong Kong SAR, China": "Hong Kong",
+    "Macao SAR, China": "Macau",
+    "Taiwan, China": "Taiwan",
+    "Russian Federation": "Russia",
+    "United States": "United States",
+    "Bolivia": "Bolivia",
+    "Tanzania": "Tanzania",
+    "Viet Nam": "Vietnam",
+    "Cote d'Ivoire": "Ivory Coast",
+    "Myanmar": "Myanmar",
+    "Somalia, Fed. Rep.": "Somalia",
+}
+
+async def fetch_wiki_summary(name: str, client: httpx.AsyncClient) -> dict | None:
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{name}"
+    try:
+        res = await client.get(url, headers={"User-Agent": "PRISM/2.0 (educational project)"})
+        if res.status_code == 200:
+            data = res.json()
+            if data.get("type") != "disambiguation" and data.get("extract"):
+                return {
+                    "title":     data.get("title", ""),
+                    "extract":   data.get("extract", ""),
+                    "thumbnail": data.get("thumbnail", {}).get("source", ""),
+                    "url":       data.get("content_urls", {}).get("desktop", {}).get("page", ""),
+                }
+    except:
+        pass
+    return None
+
 @app.get("/wiki/{country_name}")
 async def get_wiki(country_name: str):
     try:
+        # Build list of names to try
+        names_to_try = []
+        # Check alias first
+        if country_name in WIKI_ALIASES:
+            names_to_try.append(WIKI_ALIASES[country_name])
+        # Original name
+        names_to_try.append(country_name)
+        # Strip suffixes like ", Rep." ", The" etc
+        clean = country_name.split(",")[0].strip()
+        if clean != country_name:
+            names_to_try.append(clean)
+        # Add "_history" variant
+        names_to_try.append(clean + "_history")
+
         async with httpx.AsyncClient(timeout=10) as client:
-            res = await client.get(
-                f"https://en.wikipedia.org/api/rest_v1/page/summary/{country_name}",
-                headers={"User-Agent": "PRISM/2.0 (educational project)"}
-            )
-            if res.status_code != 200:
-                raise HTTPException(status_code=404, detail="Article not found")
-            data = res.json()
-            return {
-                "title":     data.get("title", ""),
-                "extract":   data.get("extract", ""),
-                "thumbnail": data.get("thumbnail", {}).get("source", ""),
-                "url":       data.get("content_urls", {}).get("desktop", {}).get("page", ""),
-            }
+            for name in names_to_try:
+                result = await fetch_wiki_summary(name, client)
+                if result:
+                    return result
+
+        raise HTTPException(status_code=404, detail="No Wikipedia article found")
     except HTTPException:
         raise
     except Exception as e:
