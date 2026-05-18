@@ -9,21 +9,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg:#080b10; --surface:#0d1117; --panel:#111820; --border:#1e2a38;
-  --accent:#00d4ff; --danger:#ff3b5c; --warning:#ffaa00; --safe:#00e5a0;
-  --text:#e8edf3; --muted:#5a7a96;
-  --font-head:'Syne',sans-serif; --font-mono:'JetBrains Mono',monospace;
+:root{
+  --bg:#080b10;--surface:#0d1117;--panel:#111820;--border:#1e2a38;
+  --accent:#00d4ff;--danger:#ff3b5c;--warning:#ffaa00;--safe:#00e5a0;
+  --text:#e8edf3;--muted:#5a7a96;
+  --font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-mono);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 
+/* Header */
 header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:1000;}
 .logo{font-family:var(--font-head);font-size:20px;font-weight:800;letter-spacing:.15em;color:var(--accent);}
 .logo span{color:var(--muted);font-weight:400;font-size:11px;letter-spacing:.1em;margin-left:12px;font-family:var(--font-mono);}
 .header-stats{display:flex;gap:32px;font-size:11px;color:var(--muted);}
 .header-stats b{color:var(--accent);font-weight:500;}
 
+/* Layout */
 .layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px);}
 
 /* Sidebar */
@@ -52,8 +54,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 /* Detail Panel */
 .detail-panel{width:400px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);}
 .detail-panel.open{transform:translateX(0);}
-
-/* Panel header */
 .detail-header{padding:20px 20px 0;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
 .detail-country{font-family:var(--font-head);font-size:22px;font-weight:700;line-height:1.1;margin-bottom:4px;}
 .detail-iso{font-size:10px;color:var(--muted);letter-spacing:.15em;}
@@ -64,10 +64,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .close-btn:hover{color:var(--text);border-color:var(--accent);}
 
 /* Tabs */
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;}
+.tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;}
 .tabs::-webkit-scrollbar{height:2px;}
 .tabs::-webkit-scrollbar-thumb{background:var(--border);}
-.tab-btn{padding:10px 16px;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--muted);background:none;border:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
+.tab-btn{padding:10px 14px;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--muted);background:none;border:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
 .tab-btn:hover{color:var(--text);}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 
@@ -84,7 +84,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 
 /* Dimension bars */
 .dim-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.dim-name{font-size:10px;color:var(--muted);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dim-name{font-size:10px;color:var(--muted);width:110px;flex-shrink:0;}
 .dim-bar-wrap{flex:1;height:4px;background:var(--border);position:relative;}
 .dim-bar-fill{position:absolute;left:0;top:0;height:100%;transition:width .6s cubic-bezier(.16,1,.3,1);}
 .dim-val{font-size:11px;width:36px;text-align:right;flex-shrink:0;}
@@ -100,11 +100,25 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .brief-level.moderate{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2);}
 .brief-level.low{background:rgba(0,229,160,.1);color:var(--safe);border:1px solid rgba(0,229,160,.2);}
 .brief-text{font-size:12px;line-height:1.8;color:var(--text);opacity:.9;}
-.driver-list{margin-top:14px;}
 .driver-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(30,42,56,.6);font-size:11px;}
 .driver-item:last-child{border-bottom:none;}
 .driver-name{color:var(--muted);text-transform:capitalize;}
-.driver-score{font-weight:500;}
+
+/* Geo/Politics info rows */
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(30,42,56,.5);font-size:11px;gap:12px;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--muted);flex-shrink:0;width:110px;}
+.info-value{color:var(--text);text-align:right;flex:1;}
+
+/* Alliance tags */
+.tag{display:inline-block;padding:2px 8px;font-size:9px;letter-spacing:.1em;border:1px solid var(--border);color:var(--muted);margin:2px;}
+.tag.active-tag{border-color:var(--accent);color:var(--accent);}
+
+/* History timeline */
+.timeline-item{display:flex;gap:14px;margin-bottom:16px;position:relative;}
+.timeline-year{font-size:10px;color:var(--accent);width:40px;flex-shrink:0;padding-top:2px;}
+.timeline-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:3px;}
+.timeline-text{font-size:11px;color:var(--text);line-height:1.6;opacity:.9;}
 
 /* Legend */
 .map-legend{position:absolute;bottom:30px;left:10px;z-index:999;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-size:10px;color:var(--muted);}
@@ -113,25 +127,25 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .legend-labels{display:flex;justify-content:space-between;width:200px;}
 
 /* Loader */
-.loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;}
+.loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;transition:opacity .5s;}
 .loader-logo{font-family:var(--font-head);font-size:36px;font-weight:800;color:var(--accent);letter-spacing:.2em;}
 .loader-bar{width:200px;height:2px;background:var(--border);position:relative;overflow:hidden;}
 .loader-bar::after{content:'';position:absolute;left:-60%;width:60%;height:100%;background:var(--accent);animation:loader-slide 1s infinite ease-in-out;}
 @keyframes loader-slide{to{left:100%;}}
 .loader-text{font-size:11px;color:var(--muted);letter-spacing:.15em;}
 
-/* Leaflet overrides */
+/* Skeleton */
+.skeleton{background:linear-gradient(90deg,var(--panel) 25%,var(--border) 50%,var(--panel) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-line{height:12px;border-radius:2px;margin-bottom:10px;}
+
+/* Leaflet */
 .leaflet-container{background:#060a0e;}
 .leaflet-control-zoom{border:1px solid var(--border)!important;background:var(--surface)!important;}
 .leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-bottom:1px solid var(--border)!important;}
 .leaflet-popup-content-wrapper{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;border-radius:0;box-shadow:0 8px 32px rgba(0,0,0,.5);}
 .leaflet-popup-tip{background:var(--panel);}
 .map-tooltip{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:8px 12px;pointer-events:none;border-radius:0;}
-
-/* Skeleton loader */
-.skeleton{background:linear-gradient(90deg,var(--panel) 25%,var(--border) 50%,var(--panel) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
-@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-.skel-line{height:12px;border-radius:2px;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -139,7 +153,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 <div class="loader" id="loader">
   <div class="loader-logo">PRISM</div>
   <div class="loader-bar"></div>
-  <div class="loader-text" id="loader-text">INITIALISING RISK INTELLIGENCE...</div>
+  <div class="loader-text" id="loader-text">INITIALISING...</div>
 </div>
 
 <header>
@@ -182,69 +196,53 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
         <div class="score-label">RISK SCORE<br>/ 100</div>
       </div>
     </div>
-
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="brief">BRIEF</button>
       <button class="tab-btn" data-tab="risk">RISK</button>
       <button class="tab-btn" data-tab="trend">TREND</button>
+      <button class="tab-btn" data-tab="geo">GEO</button>
+      <button class="tab-btn" data-tab="politics">POLITICS</button>
+      <button class="tab-btn" data-tab="history">HISTORY</button>
     </div>
-
     <div class="tab-content">
-      <!-- BRIEF TAB -->
-      <div class="tab-pane active" id="tab-brief">
-        <div id="brief-content">
-          <div class="skel-line skeleton" style="width:80%;margin-top:4px"></div>
-          <div class="skel-line skeleton" style="width:100%"></div>
-          <div class="skel-line skeleton" style="width:95%"></div>
-          <div class="skel-line skeleton" style="width:90%"></div>
-          <div class="skel-line skeleton" style="width:85%"></div>
-        </div>
-      </div>
-
-      <!-- RISK TAB -->
-      <div class="tab-pane" id="tab-risk">
-        <div class="section-title">RISK DIMENSIONS</div>
-        <div id="d-dims"></div>
-      </div>
-
-      <!-- TREND TAB -->
-      <div class="tab-pane" id="tab-trend">
-        <div class="section-title">RISK TREND 2019–2024</div>
-        <div class="chart-wrap">
-          <canvas id="trend-chart"></canvas>
-        </div>
-      </div>
+      <div class="tab-pane active" id="tab-brief"><div id="brief-content"></div></div>
+      <div class="tab-pane" id="tab-risk"><div id="d-dims"></div></div>
+      <div class="tab-pane" id="tab-trend"><div class="chart-wrap"><canvas id="trend-chart"></canvas></div></div>
+      <div class="tab-pane" id="tab-geo"><div id="geo-content"></div></div>
+      <div class="tab-pane" id="tab-politics"><div id="politics-content"></div></div>
+      <div class="tab-pane" id="tab-history"><div id="history-content"></div></div>
     </div>
   </div>
 </div>
 
 <script>
 const API = 'https://prism-api-zm47.onrender.com';
-let rankings = [], scoreMap = {}, trendChart = null, geojsonLayer = null, map;
+let rankings=[], scoreMap={}, trendChart=null, geojsonLayer=null, map, currentIso=null;
 
-// Color scale
-function scoreColor(s) {
-  if (!s && s !== 0) return '#1e2a38';
-  const t = Math.max(0, Math.min(1, (s - 45) / 35));
-  if (t < 0.33) return interpolate('#00e5a0','#ffaa00', t/0.33);
-  if (t < 0.66) return interpolate('#ffaa00','#ff6b35',(t-0.33)/0.33);
-  return interpolate('#ff6b35','#ff3b5c',(t-0.66)/0.34);
+// ── Colors ──────────────────────────────────────────────────────────────────
+function scoreColor(s){
+  if(!s&&s!==0)return'#1e2a38';
+  const t=Math.max(0,Math.min(1,(s-45)/35));
+  if(t<0.33)return lerp('#00e5a0','#ffaa00',t/0.33);
+  if(t<0.66)return lerp('#ffaa00','#ff6b35',(t-0.33)/0.33);
+  return lerp('#ff6b35','#ff3b5c',(t-0.66)/0.34);
 }
-function interpolate(c1,c2,t){
-  const p=s=>parseInt(s,16);
-  const r=c=>({r:p(c.slice(1,3)),g:p(c.slice(3,5)),b:p(c.slice(5,7))});
-  const a=r(c1),b=r(c2);
-  const h=v=>Math.round(a[v]+(b[v]-a[v])*t).toString(16).padStart(2,'0');
-  return `#${h('r')}${h('g')}${h('b')}`;
+function lerp(c1,c2,t){
+  const h=v=>Math.round(parseInt(c1.slice(v,v+2),16)+(parseInt(c2.slice(v,v+2),16)-parseInt(c1.slice(v,v+2),16))*t).toString(16).padStart(2,'0');
+  return`#${h(1)}${h(3)}${h(5)}`;
 }
 
-// Legend
+// ── Legend ──────────────────────────────────────────────────────────────────
 (function(){
   const sc=document.getElementById('legend-scale');
-  for(let i=0;i<=40;i++){const d=document.createElement('div');d.style.cssText=`flex:1;background:${scoreColor(45+i*35/40)}`;sc.appendChild(d);}
+  for(let i=0;i<=40;i++){
+    const d=document.createElement('div');
+    d.style.cssText=`flex:1;background:${scoreColor(45+i*35/40)}`;
+    sc.appendChild(d);
+  }
 })();
 
-// Tabs
+// ── Tabs ────────────────────────────────────────────────────────────────────
 document.getElementById('tabs').addEventListener('click',e=>{
   const btn=e.target.closest('.tab-btn');
   if(!btn)return;
@@ -252,13 +250,35 @@ document.getElementById('tabs').addEventListener('click',e=>{
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  // Lazy load tab data
+  if(currentIso){
+    if(btn.dataset.tab==='geo') loadGeo(currentIso);
+    if(btn.dataset.tab==='politics') loadPolitics(currentIso);
+    if(btn.dataset.tab==='history') loadHistory(currentIso);
+  }
 });
 
-// Fetch rankings
+// ── Skeleton helper ─────────────────────────────────────────────────────────
+function skeleton(n=5){
+  return Array.from({length:n},(_,i)=>`<div class="skel-line skeleton" style="width:${90-i*8}%"></div>`).join('');
+}
+
+// ── Fetch helpers ────────────────────────────────────────────────────────────
+async function apiFetch(url, timeout=10000){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),timeout);
+  try{
+    const res=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(t);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }catch(e){clearTimeout(t);throw e;}
+}
+
+// ── Rankings ────────────────────────────────────────────────────────────────
 async function fetchRankings(){
-  document.getElementById('loader-text').textContent='LOADING RISK SCORES...';
-  const res=await fetch(`${API}/rankings?limit=215`);
-  const data=await res.json();
+  setLoaderText('LOADING RISK SCORES...');
+  const data=await apiFetch(`${API}/rankings?limit=215`,15000);
   rankings=data.rankings;
   rankings.forEach(r=>{scoreMap[r.iso3]=r;});
   document.getElementById('stat-countries').textContent=rankings.length;
@@ -266,14 +286,7 @@ async function fetchRankings(){
   document.getElementById('stat-bottom').textContent=rankings[rankings.length-1]?.country?.split(',')[0]||'—';
 }
 
-// Fetch GeoJSON
-async function fetchGeoJSON(){
-  document.getElementById('loader-text').textContent='LOADING MAP DATA...';
-  const res=await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson');
-  return res.json();
-}
-
-// Render sidebar
+// ── Sidebar ──────────────────────────────────────────────────────────────────
 function renderSidebar(data){
   const list=document.getElementById('rankings-list');
   list.innerHTML='';
@@ -281,30 +294,48 @@ function renderSidebar(data){
     const color=scoreColor(r.prism_score);
     const div=document.createElement('div');
     div.className='rank-item';div.dataset.iso=r.iso3;
-    div.innerHTML=`<span class="rank-num">${r.rank}</span><span class="rank-country">${r.country}</span><span class="rank-score" style="color:${color}">${r.prism_score}</span><div class="rank-bar"><div class="rank-bar-fill" style="width:${r.prism_score}%;background:${color}"></div></div>`;
+    div.innerHTML=`
+      <span class="rank-num">${r.rank}</span>
+      <span class="rank-country">${r.country}</span>
+      <span class="rank-score" style="color:${color}">${r.prism_score}</span>
+      <div class="rank-bar"><div class="rank-bar-fill" style="width:${r.prism_score}%;background:${color}"></div></div>`;
     div.addEventListener('click',()=>selectCountry(r.iso3));
     list.appendChild(div);
   });
 }
 
-// Render map
-function renderMap(geojson){
+// ── Map ──────────────────────────────────────────────────────────────────────
+async function fetchAndRenderMap(){
+  setLoaderText('LOADING MAP...');
+  // Load GeoJSON from own server (most reliable)
+  const sources=[
+    `${API}/countries.geojson`,
+    'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson',
+  ];
+  let geojson=null;
+  for(const url of sources){
+    try{
+      geojson=await apiFetch(url,20000);
+      if(geojson?.features?.length>0){console.log('GeoJSON loaded from:',url);break;}
+    }catch(e){console.warn('GeoJSON failed:',url);}
+  }
+  if(!geojson){console.warn('Map unavailable');return;}
   geojsonLayer=L.geoJSON(geojson,{
     style:feature=>{
       const p=feature.properties;
-      const iso=(p.ISO_A3&&p.ISO_A3!=='-99')?p.ISO_A3:(p.ADM0_A3&&p.ADM0_A3!=='-99')?p.ADM0_A3:(p.ISO_A3_EH&&p.ISO_A3_EH!=='-99')?p.ISO_A3_EH:'';
+      const iso=getIso(p);
       const entry=scoreMap[iso];
-      return{fillColor:entry?scoreColor(entry.prism_score):'#1a2433',fillOpacity:entry?.0.82:0.3,color:'#0d1520',weight:0.8,opacity:1};
+      return{fillColor:entry?scoreColor(entry.prism_score):'#1a2433',fillOpacity:entry?0.82:0.3,color:'#0d1520',weight:0.8,opacity:1};
     },
     onEachFeature:(feature,layer)=>{
       const p=feature.properties;
-      const iso=(p.ISO_A3&&p.ISO_A3!=='-99')?p.ISO_A3:(p.ADM0_A3&&p.ADM0_A3!=='-99')?p.ADM0_A3:(p.ISO_A3_EH&&p.ISO_A3_EH!=='-99')?p.ISO_A3_EH:'';
+      const iso=getIso(p);
       const name=p.ADMIN||p.NAME||p.name||iso;
       const entry=scoreMap[iso];
       layer.on({
         mouseover:e=>{
           e.target.setStyle({weight:2,color:'#00d4ff',fillOpacity:0.95});
-          layer.bindTooltip(`<div style="font-family:'JetBrains Mono',monospace"><b>${name}</b><br>${entry?`Risk Score: <b style="color:${scoreColor(entry.prism_score)}">${entry.prism_score}</b>`:'<span style="color:#5a7a96">No data</span>'}</div>`,{className:'map-tooltip',sticky:true}).openTooltip();
+          layer.bindTooltip(`<div style="font-family:'JetBrains Mono',monospace"><b>${name}</b><br>${entry?`Score: <b style="color:${scoreColor(entry.prism_score)}">${entry.prism_score}</b>`:'<span style="color:#5a7a96">No data</span>'}</div>`,{className:'map-tooltip',sticky:true}).openTooltip();
         },
         mouseout:e=>{geojsonLayer.resetStyle(e.target);e.target.closeTooltip();},
         click:()=>{if(entry)selectCountry(iso);}
@@ -313,8 +344,15 @@ function renderMap(geojson){
   }).addTo(map);
 }
 
-// Render disputed territories
-async function renderDisputedTerritories(){
+function getIso(p){
+  if(p.ISO_A3&&p.ISO_A3!=='-99')return p.ISO_A3;
+  if(p.ADM0_A3&&p.ADM0_A3!=='-99')return p.ADM0_A3;
+  if(p.ISO_A3_EH&&p.ISO_A3_EH!=='-99')return p.ISO_A3_EH;
+  return p.id||'';
+}
+
+// ── Disputed territories ─────────────────────────────────────────────────────
+async function renderDisputed(){
   const LABELS={
     'Kashmir':'India, Pakistan, China','Aksai Chin':'India, China',
     'Arunachal Pradesh':'India, China','Taiwan':'China, Taiwan',
@@ -323,41 +361,38 @@ async function renderDisputedTerritories(){
     'Northern Cyprus':'Cyprus, Turkey','Nagorno-Karabakh':'Azerbaijan, Armenia',
     'South Ossetia':'Georgia, Russia','Abkhazia':'Georgia, Russia',
     'Somaliland':'Somalia, Somaliland','Kosovo':'Serbia, Kosovo',
-    'Paracel Islands':'China, Vietnam, Taiwan','Spratly Islands':'China, Vietnam, Philippines, Malaysia',
+    'Paracel Islands':'China, Vietnam, Taiwan',
+    'Spratly Islands':'China, Vietnam, Philippines, Malaysia',
   };
   try{
-    const res=await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_disputed_areas.geojson');
-    if(!res.ok)return;
-    const data=await res.json();
+    const data=await apiFetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_disputed_areas.geojson',15000);
     L.geoJSON(data,{
       style:()=>({color:'#ffaa00',weight:1.8,opacity:.95,fillColor:'#ffaa00',fillOpacity:.22,dashArray:'5,4'}),
       onEachFeature:(feature,layer)=>{
         const p=feature.properties;
         const name=p.NAME||p.name||p.NAME_LONG||'Disputed Area';
-        const claimants=LABELS[name]||p.SOVEREIGNT||'Multiple claimants';
+        const claimants=LABELS[name]||'Multiple claimants';
         layer.on({
-          mouseover:e=>{e.target.setStyle({weight:2.5,fillOpacity:.4});layer.bindTooltip(`<div style="font-family:'JetBrains Mono',monospace"><b style="color:#ffaa00">⚠ DISPUTED: ${name}</b><br><span style="color:#5a7a96;font-size:10px">Claimants: ${claimants}</span></div>`,{className:'map-tooltip',sticky:true}).openTooltip();},
+          mouseover:e=>{
+            e.target.setStyle({weight:2.5,fillOpacity:.4});
+            layer.bindTooltip(`<div style="font-family:'JetBrains Mono',monospace"><b style="color:#ffaa00">⚠ DISPUTED: ${name}</b><br><span style="color:#5a7a96;font-size:10px">${claimants}</span></div>`,{className:'map-tooltip',sticky:true}).openTooltip();
+          },
           mouseout:e=>{e.target.setStyle({weight:1.8,fillOpacity:.22});layer.closeTooltip();}
         });
       }
     }).addTo(map);
-    // Legend entry
+    // Legend
     const legend=document.querySelector('.map-legend');
     const entry=document.createElement('div');
     entry.style.cssText='margin-top:10px;border-top:1px solid #1e2a38;padding-top:10px';
-    entry.innerHTML='<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#e8edf3"><div style="width:24px;height:10px;border:1.8px dashed #ffaa00;background:rgba(255,170,0,.22)"></div>DISPUTED TERRITORY</div>';
+    entry.innerHTML='<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#e8edf3"><div style="width:24px;height:10px;border:1.8px dashed #ffaa00;background:rgba(255,170,0,.22)"></div>DISPUTED</div>';
     legend.appendChild(entry);
-  }catch(e){console.warn('Disputed territories failed:',e);}
+  }catch(e){console.warn('Disputed territories unavailable');}
 }
 
-const DIM_LABELS={
-  risk_governance:'GOVERNANCE',risk_conflict:'CONFLICT',risk_economic:'ECONOMIC',
-  risk_democracy:'DEMOCRACY',risk_corruption:'CORRUPTION',risk_social_unrest:'SOCIAL UNREST',
-  risk_sanctions:'SANCTIONS',risk_geopolitical:'GEOPOLITICAL'
-};
-
-// Select country
+// ── Select country ────────────────────────────────────────────────────────────
 async function selectCountry(iso){
+  currentIso=iso;
   document.querySelectorAll('.rank-item').forEach(el=>el.classList.toggle('active',el.dataset.iso===iso));
   const activeEl=document.querySelector(`.rank-item[data-iso="${iso}"]`);
   if(activeEl)activeEl.scrollIntoView({block:'nearest'});
@@ -369,6 +404,7 @@ async function selectCountry(iso){
   const entry=scoreMap[iso];
   if(!entry)return;
 
+  // Header
   document.getElementById('d-country').textContent=entry.country;
   document.getElementById('d-iso').textContent=`${entry.iso3} · RANK #${entry.rank}`;
   const scoreEl=document.getElementById('d-score');
@@ -381,152 +417,234 @@ async function selectCountry(iso){
   document.querySelector('[data-tab="brief"]').classList.add('active');
   document.getElementById('tab-brief').classList.add('active');
 
-  // Show skeleton
-  document.getElementById('brief-content').innerHTML=`
-    <div class="skel-line skeleton" style="width:30%;margin-top:4px;height:22px;margin-bottom:14px"></div>
-    <div class="skel-line skeleton" style="width:100%"></div>
-    <div class="skel-line skeleton" style="width:95%"></div>
-    <div class="skel-line skeleton" style="width:90%"></div>
-    <div class="skel-line skeleton" style="width:88%"></div>
-    <div class="skel-line skeleton" style="width:75%"></div>`;
+  // Skeletons
+  document.getElementById('brief-content').innerHTML=skeleton(6);
+  document.getElementById('d-dims').innerHTML=skeleton(8);
+  document.getElementById('geo-content').innerHTML=skeleton(6);
+  document.getElementById('politics-content').innerHTML=skeleton(5);
+  document.getElementById('history-content').innerHTML=skeleton(5);
 
-  // Fetch brief
-  try{
-    const res=await fetch(`${API}/brief/${iso}`);
-    const data=await res.json();
-    renderBrief(data);
-  }catch(e){document.getElementById('brief-content').innerHTML='<p style="color:var(--muted);font-size:12px">Brief unavailable.</p>';}
-
-  // Fetch full score + dimensions
-  try{
-    const res=await fetch(`${API}/score/${iso}`);
-    const data=await res.json();
-    renderDimensions(data.dimensions);
-  }catch(e){}
-
-  // Fetch trend
-  try{
-    const res=await fetch(`${API}/trend/${iso}`);
-    const data=await res.json();
-    renderTrend(data.trend);
-  }catch(e){}
+  // Load all in parallel
+  loadBrief(iso);
+  loadRisk(iso);
+  loadTrend(iso);
 }
 
-function renderBrief(data){
-  const color=scoreColor(data.prism_score);
-  document.getElementById('brief-content').innerHTML=`
-    <span class="brief-level ${data.risk_level.toLowerCase()}">${data.risk_level} RISK</span>
-    <p class="brief-text">${data.brief}</p>
-    <div class="section-title" style="margin-top:18px">TOP RISK DRIVERS</div>
-    <div class="driver-list">
+// ── Brief ────────────────────────────────────────────────────────────────────
+async function loadBrief(iso){
+  try{
+    const data=await apiFetch(`${API}/brief/${iso}`);
+    const color=scoreColor(data.prism_score);
+    document.getElementById('brief-content').innerHTML=`
+      <span class="brief-level ${data.risk_level.toLowerCase()}">${data.risk_level} RISK</span>
+      <p class="brief-text">${data.brief}</p>
+      <div class="section-title" style="margin-top:18px">TOP RISK DRIVERS</div>
       ${data.top_drivers.map(d=>`
         <div class="driver-item">
           <span class="driver-name">${d.dimension}</span>
-          <span class="driver-score" style="color:${scoreColor(d.score)}">${d.score}</span>
+          <span style="color:${scoreColor(d.score)};font-weight:500">${d.score}</span>
         </div>`).join('')}
-    </div>
-    <div class="section-title">RELATIVE STRENGTHS</div>
-    <div class="driver-list">
+      <div class="section-title">RELATIVE STRENGTHS</div>
       ${data.strengths.map(d=>`
         <div class="driver-item">
           <span class="driver-name">${d.dimension}</span>
-          <span class="driver-score" style="color:${scoreColor(d.score)}">${d.score}</span>
-        </div>`).join('')}
-    </div>`;
+          <span style="color:${scoreColor(d.score)};font-weight:500">${d.score}</span>
+        </div>`).join('')}`;
+  }catch(e){document.getElementById('brief-content').innerHTML='<p style="color:var(--muted);font-size:12px;margin-top:8px">Brief unavailable.</p>';}
 }
 
-function renderDimensions(dims){
-  const container=document.getElementById('d-dims');
-  container.innerHTML='';
-  Object.entries(DIM_LABELS).forEach(([key,label])=>{
-    const val=dims[key];if(val===undefined)return;
-    const color=scoreColor(val);
-    const row=document.createElement('div');
-    row.className='dim-row';
-    row.innerHTML=`<span class="dim-name">${label}</span><div class="dim-bar-wrap"><div class="dim-bar-fill" style="width:${val}%;background:${color}"></div></div><span class="dim-val" style="color:${color}">${val.toFixed(0)}</span>`;
-    container.appendChild(row);
-  });
+// ── Risk dimensions ───────────────────────────────────────────────────────────
+const DIM_LABELS={risk_governance:'GOVERNANCE',risk_conflict:'CONFLICT',risk_economic:'ECONOMIC',risk_democracy:'DEMOCRACY',risk_corruption:'CORRUPTION',risk_social_unrest:'SOCIAL UNREST',risk_sanctions:'SANCTIONS',risk_geopolitical:'GEOPOLITICAL'};
+async function loadRisk(iso){
+  try{
+    const data=await apiFetch(`${API}/score/${iso}`);
+    const container=document.getElementById('d-dims');
+    container.innerHTML='<div class="section-title">RISK DIMENSIONS</div>';
+    Object.entries(DIM_LABELS).forEach(([key,label])=>{
+      const val=data.dimensions[key];if(val===undefined)return;
+      const color=scoreColor(val);
+      const row=document.createElement('div');
+      row.className='dim-row';
+      row.innerHTML=`<span class="dim-name">${label}</span><div class="dim-bar-wrap"><div class="dim-bar-fill" style="width:${val}%;background:${color}"></div></div><span class="dim-val" style="color:${color}">${val.toFixed(0)}</span>`;
+      container.appendChild(row);
+    });
+  }catch(e){}
 }
 
-function renderTrend(trend){
-  if(trendChart){trendChart.destroy();trendChart=null;}
-  const ctx=document.getElementById('trend-chart').getContext('2d');
-  trendChart=new Chart(ctx,{
-    type:'line',
-    data:{
-      labels:trend.map(t=>t.year),
-      datasets:[{data:trend.map(t=>t.prism_score),borderColor:'#00d4ff',borderWidth:2,pointBackgroundColor:trend.map(t=>scoreColor(t.prism_score)),pointBorderColor:trend.map(t=>scoreColor(t.prism_score)),pointRadius:5,tension:.3,fill:true,backgroundColor:'rgba(0,212,255,.05)'}]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#111820',borderColor:'#1e2a38',borderWidth:1,titleColor:'#5a7a96',bodyColor:'#e8edf3',titleFont:{family:"'JetBrains Mono'"},bodyFont:{family:"'JetBrains Mono'"},callbacks:{label:ctx=>`Risk Score: ${ctx.raw}`}}},
-      scales:{x:{grid:{color:'#1e2a38'},ticks:{color:'#5a7a96',font:{family:"'JetBrains Mono'",size:10}}},y:{min:40,max:85,grid:{color:'#1e2a38'},ticks:{color:'#5a7a96',font:{family:"'JetBrains Mono'",size:10}}}}
+// ── Trend ─────────────────────────────────────────────────────────────────────
+async function loadTrend(iso){
+  try{
+    const data=await apiFetch(`${API}/trend/${iso}`);
+    if(trendChart){trendChart.destroy();trendChart=null;}
+    const ctx=document.getElementById('trend-chart').getContext('2d');
+    trendChart=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:data.trend.map(t=>t.year),
+        datasets:[{
+          data:data.trend.map(t=>t.prism_score),
+          borderColor:'#00d4ff',borderWidth:2,
+          pointBackgroundColor:data.trend.map(t=>scoreColor(t.prism_score)),
+          pointBorderColor:data.trend.map(t=>scoreColor(t.prism_score)),
+          pointRadius:5,tension:.3,fill:true,
+          backgroundColor:'rgba(0,212,255,.05)'
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{backgroundColor:'#111820',borderColor:'#1e2a38',borderWidth:1,titleColor:'#5a7a96',bodyColor:'#e8edf3',titleFont:{family:"'JetBrains Mono'"},bodyFont:{family:"'JetBrains Mono'"},callbacks:{label:ctx=>`Score: ${ctx.raw}`}}},
+        scales:{x:{grid:{color:'#1e2a38'},ticks:{color:'#5a7a96',font:{family:"'JetBrains Mono'",size:10}}},y:{min:40,max:85,grid:{color:'#1e2a38'},ticks:{color:'#5a7a96',font:{family:"'JetBrains Mono'",size:10}}}}
+      }
+    });
+  }catch(e){}
+}
+
+// ── Geography ─────────────────────────────────────────────────────────────────
+async function loadGeo(iso){
+  const container=document.getElementById('geo-content');
+  if(container.dataset.loaded===iso)return;
+  container.innerHTML=skeleton(6);
+  try{
+    const res=await fetch(`https://restcountries.com/v3.1/alpha/${iso}?fields=name,capital,area,population,languages,borders,timezones,flags,region,subregion,latlng,currencies`);
+    if(!res.ok)throw new Error();
+    const [c]=await res.json();
+    const langs=Object.values(c.languages||{}).join(', ')||'—';
+    const currencies=Object.values(c.currencies||{}).map(cur=>`${cur.name} (${cur.symbol||''})`).join(', ')||'—';
+    const neighbours=c.borders?.length?c.borders.join(', '):'None';
+    const pop=c.population?c.population.toLocaleString():'—';
+    const area=c.area?c.area.toLocaleString()+' km²':'—';
+    container.innerHTML=`
+      <div style="font-size:48px;margin-bottom:12px">${c.flags?.emoji||''}</div>
+      <div class="section-title">BASIC FACTS</div>
+      ${infoRow('Full Name',c.name?.official||c.name?.common||'—')}
+      ${infoRow('Capital',c.capital?.[0]||'—')}
+      ${infoRow('Region',`${c.subregion||''} ${c.region||''}`)}
+      ${infoRow('Population',pop)}
+      ${infoRow('Area',area)}
+      ${infoRow('Languages',langs)}
+      ${infoRow('Currencies',currencies)}
+      ${infoRow('Timezones',c.timezones?.[0]||'—')}
+      <div class="section-title">NEIGHBOURS</div>
+      <div style="font-size:11px;color:var(--text);line-height:2">${neighbours}</div>`;
+    container.dataset.loaded=iso;
+  }catch(e){container.innerHTML='<p style="color:var(--muted);font-size:12px;margin-top:8px">Geography data unavailable.</p>';}
+}
+
+// ── Politics ──────────────────────────────────────────────────────────────────
+async function loadPolitics(iso){
+  const container=document.getElementById('politics-content');
+  if(container.dataset.loaded===iso)return;
+  container.innerHTML=skeleton(5);
+  try{
+    const res=await fetch(`https://restcountries.com/v3.1/alpha/${iso}?fields=name,region,subregion,unMember,independent,status,startOfWeek,continents`);
+    if(!res.ok)throw new Error();
+    const [c]=await res.json();
+
+    // Get Wikipedia politics summary
+    const wikiName=encodeURIComponent((c.name?.common||iso)+' government');
+    const wikiRes=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(c.name?.common||iso)}`);
+    let wikiSummary='';
+    if(wikiRes.ok){
+      const wikiData=await wikiRes.json();
+      wikiSummary=wikiData.extract?.slice(0,400)||'';
     }
-  });
+
+    const alliances=[];
+    if(c.unMember)alliances.push('UN');
+    if(['Europe','Americas'].includes(c.region))alliances.push(c.region+' region');
+
+    container.innerHTML=`
+      <div class="section-title">POLITICAL STATUS</div>
+      ${infoRow('UN Member',c.unMember?'Yes':'No')}
+      ${infoRow('Independent',c.independent?'Yes':'No / Territory')}
+      ${infoRow('Status',c.status||'—')}
+      ${infoRow('Region',c.region||'—')}
+      ${infoRow('Continent',c.continents?.join(', ')||'—')}
+      <div class="section-title" style="margin-top:18px">OVERVIEW</div>
+      <p style="font-size:11px;line-height:1.8;color:var(--text);opacity:.85">${wikiSummary||'No summary available.'}</p>`;
+    container.dataset.loaded=iso;
+  }catch(e){container.innerHTML='<p style="color:var(--muted);font-size:12px;margin-top:8px">Political data unavailable.</p>';}
 }
 
-// Search
+// ── History ───────────────────────────────────────────────────────────────────
+async function loadHistory(iso){
+  const container=document.getElementById('history-content');
+  if(container.dataset.loaded===iso)return;
+  container.innerHTML=skeleton(5);
+  try{
+    // Get country name first
+    const entry=scoreMap[iso];
+    const countryName=entry?.country||iso;
+    const cleanName=countryName.replace(/,.*$/,'').trim();
+
+    // Wikipedia summary
+    const res=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanName)}`);
+    if(!res.ok)throw new Error();
+    const data=await res.json();
+
+    container.innerHTML=`
+      <div class="section-title">HISTORICAL OVERVIEW</div>
+      <p style="font-size:11px;line-height:1.8;color:var(--text);opacity:.85;margin-bottom:16px">${data.extract||'No historical data available.'}</p>
+      ${data.thumbnail?.source?`<img src="${data.thumbnail.source}" style="width:100%;opacity:.7;margin-top:8px" alt="${cleanName}"/>`:''}
+      <div style="margin-top:12px">
+        <a href="${data.content_urls?.desktop?.page||'#'}" target="_blank" style="font-size:10px;color:var(--accent);letter-spacing:.1em">READ FULL ARTICLE ON WIKIPEDIA →</a>
+      </div>`;
+    container.dataset.loaded=iso;
+  }catch(e){container.innerHTML='<p style="color:var(--muted);font-size:12px;margin-top:8px">Historical data unavailable.</p>';}
+}
+
+// ── Info row helper ───────────────────────────────────────────────────────────
+function infoRow(label,value){
+  return`<div class="info-row"><span class="info-label">${label}</span><span class="info-value">${value}</span></div>`;
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
 document.getElementById('search').addEventListener('input',e=>{
   const q=e.target.value.toLowerCase();
   renderSidebar(q?rankings.filter(r=>r.country.toLowerCase().includes(q)||r.iso3.toLowerCase().includes(q)):rankings);
 });
 
-// Close
+// ── Close ─────────────────────────────────────────────────────────────────────
 document.getElementById('close-btn').addEventListener('click',()=>{
   document.getElementById('detail-panel').classList.remove('open');
   document.querySelectorAll('.rank-item').forEach(el=>el.classList.remove('active'));
+  currentIso=null;
   setTimeout(()=>map.invalidateSize(),350);
 });
 
-// Boot
+// ── Loader text ───────────────────────────────────────────────────────────────
+function setLoaderText(t){document.getElementById('loader-text').textContent=t;}
+function hideLoader(){
+  const l=document.getElementById('loader');
+  l.style.opacity='0';
+  setTimeout(()=>l.style.display='none',500);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener('load',async function(){
   try{
+    // Init map
     map=L.map('map',{center:[20,10],zoom:2.5,minZoom:1.5,maxZoom:8,zoomControl:true,attributionControl:false});
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
     setTimeout(()=>map.invalidateSize(),100);
 
-    // Step 1 — rankings (must succeed)
-    document.getElementById('loader-text').textContent='LOADING RISK SCORES...';
+    // Load rankings — must succeed
     await fetchRankings();
     renderSidebar(rankings);
 
-    // Step 2 — hide loader NOW so user sees sidebar even if map is slow
-    document.getElementById('loader').style.opacity='0';
-    document.getElementById('loader').style.transition='opacity 0.5s';
-    setTimeout(()=>document.getElementById('loader').style.display='none',500);
+    // Hide loader immediately after rankings load
+    hideLoader();
 
-    // Step 3 — load GeoJSON with multiple fallbacks
-    document.getElementById('loader-text').textContent='LOADING MAP...';
-    const GEOJSON_SOURCES=[
-      'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson',
-      'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json',
-    ];
-    let geojson=null;
-    for(const url of GEOJSON_SOURCES){
-      try{
-        const controller=new AbortController();
-        const timeout=setTimeout(()=>controller.abort(),15000);
-        const res=await fetch(url,{signal:controller.signal});
-        clearTimeout(timeout);
-        if(res.ok){geojson=await res.json();break;}
-      }catch(e){console.warn('GeoJSON source failed:',url,e);}
-    }
-    if(geojson) renderMap(geojson);
-    else console.warn('All GeoJSON sources failed — map will show without country shapes');
+    // Load map in background — don't block
+    fetchAndRenderMap().catch(e=>console.warn('Map failed:',e));
+    renderDisputed().catch(e=>console.warn('Disputed failed:',e));
 
-    // Step 4 — disputed territories (optional, don't block)
-    renderDisputedTerritories().catch(e=>console.warn('Disputed territories failed:',e));
-
-    // Keep alive ping every 14 min to prevent Render sleep
-    setInterval(()=>fetch(API+'/').catch(()=>{}), 14*60*1000);
+    // Keep Render awake every 14 min
+    setInterval(()=>fetch(API+'/').catch(()=>{}),14*60*1000);
 
   }catch(err){
-    document.getElementById('loader-text').textContent='ERROR: '+err.message;
-    // Still hide loader after error so user sees what happened
-    setTimeout(()=>{
-      document.getElementById('loader').style.opacity='0';
-      setTimeout(()=>document.getElementById('loader').style.display='none',500);
-    },3000);
+    setLoaderText('ERROR: '+err.message+' — Refresh to retry');
+    setTimeout(hideLoader,4000);
   }
 });
 </script>
