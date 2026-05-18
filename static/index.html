@@ -505,26 +505,27 @@ async function loadGeo(iso){
   if(container.dataset.loaded===iso)return;
   container.innerHTML=skeleton(6);
   try{
-    const res=await fetch(`https://restcountries.com/v3.1/alpha/${iso}?fields=name,capital,area,population,languages,borders,timezones,flags,region,subregion,latlng,currencies`);
-    if(!res.ok)throw new Error();
-    const [c]=await res.json();
-    const langs=Object.values(c.languages||{}).join(', ')||'—';
-    const currencies=Object.values(c.currencies||{}).map(cur=>`${cur.name} (${cur.symbol||''})`).join(', ')||'—';
-    const neighbours=c.borders?.length?c.borders.join(', '):'None';
+    const c=await apiFetch(`${API}/geography/${iso}`);
+    const langs=c.languages?.join(', ')||'—';
+    const currencies=c.currencies?.map(cur=>`${cur.name} ${cur.symbol?'('+cur.symbol+')':''}`).join(', ')||'—';
+    const neighbours=c.neighbours?.length?c.neighbours.join(', '):'None / Island state';
     const pop=c.population?c.population.toLocaleString():'—';
     const area=c.area?c.area.toLocaleString()+' km²':'—';
     container.innerHTML=`
-      <div style="font-size:48px;margin-bottom:12px">${c.flags?.emoji||''}</div>
+      <div style="font-size:48px;margin-bottom:12px">${c.flag_emoji||''}</div>
       <div class="section-title">BASIC FACTS</div>
-      ${infoRow('Full Name',c.name?.official||c.name?.common||'—')}
-      ${infoRow('Capital',c.capital?.[0]||'—')}
-      ${infoRow('Region',`${c.subregion||''} ${c.region||''}`)}
+      ${infoRow('Full Name',c.name||'—')}
+      ${infoRow('Capital',c.capital||'—')}
+      ${infoRow('Region',`${c.subregion||''} ${c.region||''}`.trim())}
+      ${infoRow('Continent',c.continents?.join(', ')||'—')}
       ${infoRow('Population',pop)}
       ${infoRow('Area',area)}
       ${infoRow('Languages',langs)}
       ${infoRow('Currencies',currencies)}
-      ${infoRow('Timezones',c.timezones?.[0]||'—')}
-      <div class="section-title">NEIGHBOURS</div>
+      ${infoRow('Timezone',c.timezones?.[0]||'—')}
+      ${infoRow('UN Member',c.un_member?'Yes':'No')}
+      ${infoRow('Independent',c.independent?'Yes':'No / Territory')}
+      <div class="section-title">NEIGHBOURING COUNTRIES</div>
       <div style="font-size:11px;color:var(--text);line-height:2">${neighbours}</div>`;
     container.dataset.loaded=iso;
   }catch(e){container.innerHTML='<p style="color:var(--muted);font-size:12px;margin-top:8px">Geography data unavailable.</p>';}
@@ -536,32 +537,25 @@ async function loadPolitics(iso){
   if(container.dataset.loaded===iso)return;
   container.innerHTML=skeleton(5);
   try{
-    const res=await fetch(`https://restcountries.com/v3.1/alpha/${iso}?fields=name,region,subregion,unMember,independent,status,startOfWeek,continents`);
-    if(!res.ok)throw new Error();
-    const [c]=await res.json();
-
-    // Get Wikipedia politics summary
-    const wikiName=encodeURIComponent((c.name?.common||iso)+' government');
-    const wikiRes=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(c.name?.common||iso)}`);
-    let wikiSummary='';
-    if(wikiRes.ok){
-      const wikiData=await wikiRes.json();
-      wikiSummary=wikiData.extract?.slice(0,400)||'';
-    }
-
-    const alliances=[];
-    if(c.unMember)alliances.push('UN');
-    if(['Europe','Americas'].includes(c.region))alliances.push(c.region+' region');
-
+    const entry=scoreMap[iso];
+    const countryName=entry?.country?.replace(/,.*$/,'').trim()||iso;
+    const [geo, wiki]=await Promise.allSettled([
+      apiFetch(`${API}/geography/${iso}`),
+      apiFetch(`${API}/wiki/${encodeURIComponent(countryName)}`)
+    ]);
+    const c=geo.status==='fulfilled'?geo.value:{};
+    const w=wiki.status==='fulfilled'?wiki.value:{};
     container.innerHTML=`
       <div class="section-title">POLITICAL STATUS</div>
-      ${infoRow('UN Member',c.unMember?'Yes':'No')}
-      ${infoRow('Independent',c.independent?'Yes':'No / Territory')}
+      ${infoRow('UN Member',c.un_member?'✓ Yes':'✗ No')}
+      ${infoRow('Independent',c.independent?'✓ Yes':'✗ Territory')}
       ${infoRow('Status',c.status||'—')}
       ${infoRow('Region',c.region||'—')}
       ${infoRow('Continent',c.continents?.join(', ')||'—')}
-      <div class="section-title" style="margin-top:18px">OVERVIEW</div>
-      <p style="font-size:11px;line-height:1.8;color:var(--text);opacity:.85">${wikiSummary||'No summary available.'}</p>`;
+      <div class="section-title" style="margin-top:18px">COUNTRY OVERVIEW</div>
+      <p style="font-size:11px;line-height:1.8;color:var(--text);opacity:.85;margin-bottom:12px">${w.extract?.slice(0,500)||'No overview available.'}</p>
+      ${w.url?`<a href="${w.url}" target="_blank" style="font-size:10px;color:var(--accent);letter-spacing:.1em">READ MORE ON WIKIPEDIA →</a>`:''}
+    `;
     container.dataset.loaded=iso;
   }catch(e){container.innerHTML='<p style="color:var(--muted);font-size:12px;margin-top:8px">Political data unavailable.</p>';}
 }
@@ -578,9 +572,7 @@ async function loadHistory(iso){
     const cleanName=countryName.replace(/,.*$/,'').trim();
 
     // Wikipedia summary
-    const res=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanName)}`);
-    if(!res.ok)throw new Error();
-    const data=await res.json();
+    const data=await apiFetch(`${API}/wiki/${encodeURIComponent(cleanName)}`);
 
     container.innerHTML=`
       <div class="section-title">HISTORICAL OVERVIEW</div>
