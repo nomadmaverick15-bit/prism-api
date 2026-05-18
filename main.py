@@ -279,9 +279,66 @@ def get_brief(iso3: str):
         raise HTTPException(status_code=404, detail=result["error"])
     return result
 
-@app.get("/countries.geojson")
-def serve_geojson():
-    return FileResponse(
-        os.path.join(static_dir, "countries.geojson"),
-        media_type="application/json"
-    )
+# ── Geography (proxy to REST Countries) ──────────────────────────────────────
+import httpx
+
+@app.get("/geography/{iso3}")
+async def get_geography(iso3: str):
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            res = await client.get(
+                f"https://restcountries.com/v3.1/alpha/{iso3}",
+                params={"fields": "name,capital,area,population,languages,borders,timezones,flags,region,subregion,continents,currencies,unMember,independent,status"}
+            )
+            if res.status_code != 200:
+                raise HTTPException(status_code=404, detail="Country not found")
+            data = res.json()
+            c = data[0] if isinstance(data, list) else data
+            return {
+                "iso3":        iso3.upper(),
+                "name":        c.get("name", {}).get("official", ""),
+                "common_name": c.get("name", {}).get("common", ""),
+                "flag_emoji":  c.get("flags", {}).get("emoji", ""),
+                "flag_png":    c.get("flags", {}).get("png", ""),
+                "capital":     c.get("capital", ["—"])[0] if c.get("capital") else "—",
+                "region":      c.get("region", "—"),
+                "subregion":   c.get("subregion", "—"),
+                "continents":  c.get("continents", []),
+                "population":  c.get("population", 0),
+                "area":        c.get("area", 0),
+                "languages":   list(c.get("languages", {}).values()),
+                "currencies":  [{"name": v.get("name",""), "symbol": v.get("symbol","")} for v in c.get("currencies", {}).values()],
+                "neighbours":  c.get("borders", []),
+                "timezones":   c.get("timezones", []),
+                "un_member":   c.get("unMember", False),
+                "independent": c.get("independent", False),
+                "status":      c.get("status", "—"),
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── History + Politics (proxy to Wikipedia) ───────────────────────────────────
+@app.get("/wiki/{country_name}")
+async def get_wiki(country_name: str):
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            res = await client.get(
+                f"https://en.wikipedia.org/api/rest_v1/page/summary/{country_name}",
+                headers={"User-Agent": "PRISM/2.0 (educational project)"}
+            )
+            if res.status_code != 200:
+                raise HTTPException(status_code=404, detail="Article not found")
+            data = res.json()
+            return {
+                "title":     data.get("title", ""),
+                "extract":   data.get("extract", ""),
+                "thumbnail": data.get("thumbnail", {}).get("source", ""),
+                "url":       data.get("content_urls", {}).get("desktop", {}).get("page", ""),
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
